@@ -20,7 +20,7 @@ module.exports = {
             whatsapp,
             city,
             uf,
-        }).then(([id]) => {
+        }).then(() => {
             return response.json({ id });
         });
     },
