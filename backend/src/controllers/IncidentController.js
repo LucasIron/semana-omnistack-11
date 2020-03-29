@@ -63,6 +63,7 @@ module.exports = {
 
         return connection('incidents').where('id', id).select('ong_id').first()
         .then((incident) => {
+            if (!incident) return response.status(400).send({ error: 'No incident found with this Id' });
             const { ong_id } = incident;
 
             return ong_id !== authorization

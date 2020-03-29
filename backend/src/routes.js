@@ -1,5 +1,6 @@
 
 const express = require('express');
+const { celebrate, Segments, Joi } = require('celebrate');
 
 const OngController = require('./controllers/OngController');
 const IncidentController = require('./controllers/IncidentController');
@@ -8,15 +9,52 @@ const SessionController = require('./controllers/SessionController');
 
 const routes = express.Router();
 
-routes.post('/sessions', SessionController.create);
+routes.post('/sessions', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+        id: Joi.string().required(),
+    }),
+}), SessionController.create);
 
-routes.post('/ongs', OngController.create);
+routes.post('/ongs', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+        name: Joi.string().required(),
+        email: Joi.string().required().email(),
+        whatsapp: Joi.string().required().min(10).max(11).pattern(/^\d*$/),
+        city: Joi.string().required(),
+        uf: Joi.string().required().length(2),
+    }),
+}), OngController.create);
 routes.get('/ongs', OngController.index);
 
-routes.post('/incidents', IncidentController.create);
-routes.get('/incidents', IncidentController.index);
-routes.delete('/incidents/:id', IncidentController.delete);
+routes.post('/incidents', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+        title: Joi.string().required(),
+        description: Joi.string().required(),
+        value: Joi.number().required(),
+    }),
+    [Segments.HEADERS]: Joi.object({
+        authorization: Joi.string().required(),
+    }).unknown(),
+}), IncidentController.create);
+routes.get('/incidents', celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        page: Joi.number().integer(),
+        limit: Joi.number().integer(),
+    }),
+}), IncidentController.index);
+routes.delete('/incidents/:id', celebrate({
+    [Segments.PARAMS]: Joi.object().keys({
+        id: Joi.number().integer().required(),
+    }),
+    [Segments.HEADERS]: Joi.object({
+        authorization: Joi.string().required(),
+    }).unknown(),
+}), IncidentController.delete);
 
-routes.get('/ongs/incidents', OngIncidentsController.index);
+routes.get('/ongs/incidents', celebrate({
+    [Segments.HEADERS]: Joi.object({
+        authorization: Joi.string().required(),
+    }).unknown(),
+}), OngIncidentsController.index);
 
 module.exports = routes;
